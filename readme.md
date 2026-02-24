@@ -306,6 +306,263 @@ The API uses JWT (JSON Web Tokens) for authentication:
    Authorization: Bearer <access_token>
    ```
 
+## API Usage Examples
+
+### 1. Register a New User
+
+**cURL:**
+```bash
+curl -X POST http://localhost:8000/api/users/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "SecurePass123",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/users/register/"
+data = {
+    "email": "john@example.com",
+    "password": "SecurePass123",
+    "first_name": "John",
+    "last_name": "Doe"
+}
+response = requests.post(url, json=data)
+print(response.json())
+```
+
+### 2. Login and Get JWT Tokens
+
+**cURL:**
+```bash
+curl -X POST http://localhost:8000/api/users/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "SecurePass123"
+  }'
+```
+
+**Response:**
+```json
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/users/login/"
+data = {
+    "email": "john@example.com",
+    "password": "SecurePass123"
+}
+response = requests.post(url, json=data)
+tokens = response.json()
+access_token = tokens['access']
+print(f"Access Token: {access_token}")
+```
+
+### 3. Create Train (Admin Only)
+
+**cURL:**
+```bash
+curl -X POST http://localhost:8000/api/trains/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "train_number": "12345",
+    "name": "Express Train",
+    "source": "Delhi",
+    "destination": "Mumbai",
+    "departure_time": "2026-03-15T10:00:00Z",
+    "arrival_time": "2026-03-16T08:00:00Z",
+    "total_seats": 500,
+    "available_seats": 500
+  }'
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/trains/"
+headers = {"Authorization": f"Bearer {access_token}"}
+data = {
+    "train_number": "12345",
+    "name": "Express Train",
+    "source": "Delhi",
+    "destination": "Mumbai",
+    "departure_time": "2026-03-15T10:00:00Z",
+    "arrival_time": "2026-03-16T08:00:00Z",
+    "total_seats": 500,
+    "available_seats": 500
+}
+response = requests.post(url, json=data, headers=headers)
+print(response.json())
+```
+
+### 4. Search for Trains
+
+**cURL:**
+```bash
+curl -X GET "http://localhost:8000/api/trains/search/?source=Delhi&destination=Mumbai&date=2026-03-15&limit=10&offset=0" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/trains/search/"
+headers = {"Authorization": f"Bearer {access_token}"}
+params = {
+    "source": "Delhi",
+    "destination": "Mumbai",
+    "date": "2026-03-15",
+    "limit": 10,
+    "offset": 0
+}
+response = requests.get(url, headers=headers, params=params)
+results = response.json()
+print(f"Found {results['count']} trains")
+for train in results['results']:
+    print(f"Train: {train['name']} ({train['train_number']})")
+    print(f"Available Seats: {train['available_seats']}")
+```
+
+### 5. Create a Booking
+
+**cURL:**
+```bash
+curl -X POST http://localhost:8000/api/booking/create/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "train_number": "12345",
+    "booking_date": "2026-03-15",
+    "seat_requested": 2
+  }'
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/booking/create/"
+headers = {"Authorization": f"Bearer {access_token}"}
+data = {
+    "train_number": "12345",
+    "booking_date": "2026-03-15",
+    "seat_requested": 2
+}
+response = requests.post(url, json=data, headers=headers)
+booking = response.json()
+print(f"Booking confirmed: {booking['id']}")
+print(f"Seats booked: {booking['seat_requested']}")
+```
+
+### 6. Get User Bookings
+
+**cURL:**
+```bash
+curl -X GET http://localhost:8000/api/booking/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/booking/"
+headers = {"Authorization": f"Bearer {access_token}"}
+response = requests.get(url, headers=headers)
+bookings = response.json()
+for booking in bookings:
+    print(f"Booking ID: {booking['id']}")
+    print(f"Train: {booking['train_number']}")
+    print(f"Seats: {booking['seat_requested']}")
+```
+
+### 7. Get Top Routes Analytics
+
+**cURL:**
+```bash
+curl -X GET http://localhost:8000/api/booking/analytics/top-routes/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/booking/analytics/top-routes/"
+headers = {"Authorization": f"Bearer {access_token}"}
+response = requests.get(url, headers=headers)
+routes = response.json()
+for route in routes:
+    print(f"Route: {route['source']} → {route['destination']}")
+    print(f"Total Bookings: {route['booking_count']}")
+```
+
+### 8. Get Train by Number (Admin Only)
+
+**cURL:**
+```bash
+curl -X GET http://localhost:8000/api/trains/12345/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/trains/12345/"
+headers = {"Authorization": f"Bearer {access_token}"}
+response = requests.get(url, headers=headers)
+train = response.json()
+print(f"Train: {train['name']}")
+print(f"Available Seats: {train['available_seats']}/{train['total_seats']}")
+```
+
+### 9. Update Train Information (Admin Only)
+
+**cURL:**
+```bash
+curl -X POST http://localhost:8000/api/trains/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "train_number": "12345",
+    "total_seats": 600,
+    "available_seats": 550
+  }'
+```
+
+**Python:**
+```python
+import requests
+
+url = "http://localhost:8000/api/trains/"
+headers = {"Authorization": f"Bearer {access_token}"}
+data = {
+    "train_number": "12345",
+    "total_seats": 600,
+    "available_seats": 550
+}
+response = requests.post(url, json=data, headers=headers)
+print(f"Train updated: {response.json()}")
+```
+
 ## Database Logging
 
 Search queries are logged to MongoDB with the following details:
